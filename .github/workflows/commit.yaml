@@ -61,14 +61,14 @@ jobs:
           disk-root: "D:"
 
       - name: "Install Wazero"
-      - run: |
+        run: |
           git clone https://github.com/tetratelabs/wazero
           cd wazero
           go install ./cmd/wazero
           cd ..
 
       - name: "Run Wazero (old compiler)"
-      - run: |
+        run: |
           cd 2022-12/wasm
           for I in *
           do
@@ -76,7 +76,7 @@ jobs:
           done
 
       - name: "Run Wazero (optimizing compiler)"
-      - run: |
+        run: |
           cd 2022-12/wasm
           for I in *
           do
