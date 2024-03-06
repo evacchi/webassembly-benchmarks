@@ -5,11 +5,6 @@ on:
       - '**/*.md'
       - 'site/**'
       - 'netlify.toml'
-  push:
-    paths-ignore:  # ignore docs as they are built with Netlify.
-      - '**/*.md'
-      - 'site/**'
-      - 'netlify.toml'
 
 env:  # Update this prior to requiring a higher minor version in go.mod
   GO_VERSION: "1.22"
@@ -26,7 +21,7 @@ concurrency:
 jobs:
 
   test:
-    name: ${{ matrix.platform.arch }}, ${{ matrix.platform.os }}, Go-${{ matrix.go-version }}
+    name: "Old Compiler: ${{ matrix.platform.arch }}, ${{ matrix.platform.os }}, Go-${{ matrix.go-version }}"
     runs-on: ${{ matrix.platform.os }}
     strategy:
       fail-fast: false  # don't fail fast as sometimes failures are arch/OS specific
@@ -73,6 +68,47 @@ jobs:
                   echo -n $I:\  && wazero run $I
           done
 
+
+    name: "New Compiler: ${{ matrix.platform.arch }}, ${{ matrix.platform.os }}, Go-${{ matrix.go-version }}"
+    runs-on: ${{ matrix.platform.os }}
+    strategy:
+      fail-fast: false  # don't fail fast as sometimes failures are arch/OS specific
+      matrix:  # Use versions consistent with wazero's Go support policy.
+        platform:
+        - os: ubuntu-22.04
+          arch: amd64
+        - os: macos-12
+          arch: amd64
+        - os: windows-2022
+          arch: amd64
+        - os: macos-14
+          arch: arm64
+        go-version:
+          - "1.22"  # Current Go version
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      # Ensure the pagefile is large enough to execute tests like TestStore_hammer_close on Windows.
+      - name: configure Pagefile
+        uses: al-cheb/configure-pagefile-action@v1.2
+        if: runner.os == 'Windows'
+        with:
+          minimum-size: 8GB
+          maximum-size: 16GB
+          disk-root: "D:"
+
+      - name: "Install Wazero"
+        run: |
+          git clone https://github.com/tetratelabs/wazero
+          cd wazero
+          git checkout 796fca4689be6
+          go install ./cmd/wazero
+          cd ..
+
       - name: "Run Wazero (optimizing compiler)"
         run: |
           cd 2022-12/wasm
@@ -80,5 +116,93 @@ jobs:
           do
                   echo -n $I:\  && wazero run -optimizing-compiler $I
           done
+
+
+    name: "Wasmer: ${{ matrix.platform.arch }}, ${{ matrix.platform.os }}, Go-${{ matrix.go-version }}"
+    runs-on: ${{ matrix.platform.os }}
+    strategy:
+      fail-fast: false  # don't fail fast as sometimes failures are arch/OS specific
+      matrix:  # Use versions consistent with wazero's Go support policy.
+        platform:
+        - os: ubuntu-22.04
+          arch: amd64
+        - os: macos-12
+          arch: amd64
+        - os: windows-2022
+          arch: amd64
+        - os: macos-14
+          arch: arm64
+        go-version:
+          - "1.22"  # Current Go version
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      # Ensure the pagefile is large enough to execute tests like TestStore_hammer_close on Windows.
+      - name: configure Pagefile
+        uses: al-cheb/configure-pagefile-action@v1.2
+        if: runner.os == 'Windows'
+        with:
+          minimum-size: 8GB
+          maximum-size: 16GB
+          disk-root: "D:"
+
+      - name: "Install Wazero"
+        run: |
+          git clone https://github.com/tetratelabs/wazero
+          cd wazero
+          git checkout 796fca4689be6
+          go install ./cmd/wazero
+          cd ..
+
+      - name: "Run Wazero (optimizing compiler)"
+        run: |
+          cd 2022-12/wasm
+          for I in *
+          do
+                  echo -n $I:\  && wazero run -optimizing-compiler $I
+          done
+
+
+
+
+    name: "Wasmer: ${{ matrix.platform.arch }}, ${{ matrix.platform.os }}, Go-${{ matrix.go-version }}"
+    runs-on: ${{ matrix.platform.os }}
+    strategy:
+      fail-fast: false  # don't fail fast as sometimes failures are arch/OS specific
+      matrix:  # Use versions consistent with wazero's Go support policy.
+        platform:
+        - os: ubuntu-22.04
+          arch: amd64
+        - os: macos-12
+          arch: amd64
+        - os: windows-2022
+          arch: amd64
+        - os: macos-14
+          arch: arm64
+        go-version:
+          - "1.22"  # Current Go version
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: "Install Wasmer"
+        run: |
+          curl https://get.wasmer.io -sSfL | sh "v3.0.0"
+
+      - name: "Run Wasmer single pass"
+        run: |
+          cd 2022-12/wasm
+          for I in *
+          do
+                  echo -n $I:\  && wasmer run --singlepass $I
+          done
+
 
 
