@@ -144,7 +144,7 @@ jobs:
       - name: "Run Wasmer single pass"
         run: |
           curl https://get.wasmer.io -sSfL | sh -s "v3.0.0"
-          source /home/runner/.wasmer/wasmer.sh
+          source ~/.wasmer/wasmer.sh
           cd 2022-12/wasm
           for I in *
           do
