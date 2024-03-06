@@ -62,25 +62,25 @@ jobs:
 
       - name: "Install Wazero"
       - run: |
-        git clone https://github.com/tetratelabs/wazero
-        cd wazero
-        go install ./cmd/wazero
-        cd ..
+          git clone https://github.com/tetratelabs/wazero
+          cd wazero
+          go install ./cmd/wazero
+          cd ..
 
       - name: "Run Wazero (old compiler)"
-      - run:
-        cd 2022-12/wasm
-        for I in *
-        do
-                echo -n $I:\  && wazero run $I
-        done
+      - run: |
+          cd 2022-12/wasm
+          for I in *
+          do
+                  echo -n $I:\  && wazero run $I
+          done
 
       - name: "Run Wazero (optimizing compiler)"
-      - run:
-        cd 2022-12/wasm
-        for I in *
-        do
-                echo -n $I:\  && wazero run -optimizing-compiler $I
-        done
+      - run: |
+          cd 2022-12/wasm
+          for I in *
+          do
+                  echo -n $I:\  && wazero run -optimizing-compiler $I
+          done
 
 
